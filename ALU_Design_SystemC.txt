@@ -1,0 +1,100 @@
+// Code your design here
+#include <systemc.h>
+
+SC_MODULE (ALU) {
+ 
+    sc_in <sc_int<7>> A;   
+    sc_in <sc_int<7>> B;   
+    sc_in <bool> Cin;   
+	sc_out <bool>Cout;
+    sc_in <sc_uint<4>> Opcode;
+    sc_out <sc_int<7>> Result;  
+
+
+    SC_CTOR (ALU){
+        SC_METHOD (process);
+        sensitive << A << B << Opcode;
+    }
+    
+    void process () {
+
+        sc_int<7> a = A.read();
+        sc_int<7> b = B.read();
+        bool cin = Cin.read();
+        sc_uint<4> op = Opcode.read();
+
+
+        switch (op){
+            case 0b0000 :
+                Result.write(a*b);
+          		Cout.write(0);
+                break;
+            case 0b0001 :
+                Result.write(a+b+Cin);
+                Cout.write(0);
+                break;
+            case 0b0010 :
+                Result.write(a%b);
+                Cout.write(0);
+                break;
+            case 0b0011 :
+                Result.write(~b);
+                Cout.write(0);
+                break;
+
+ 
+        }
+    }
+    
+    
+};
+
+
+// Code your testbench here
+// or browse Examples
+#include <systemc.h>
+#include "design.cpp"
+
+
+using namespace std;
+
+int sc_main(int argc, char* argv[]){
+    cout << "starting ALU" << endl;
+
+    sc_signal<sc_int<7>> A, B, Result;
+    sc_signal<sc_uint<4>> Opcode;
+    sc_signal<bool> Cin, Cout;
+
+    ALU alu ("ALU");
+    alu (A ,B, Cin, Cout, Opcode, Result);
+    
+    sc_trace_file *wf = sc_create_vcd_trace_file("tracer");
+    sc_trace (wf, A, "A");
+    sc_trace (wf, B, "B");
+    sc_trace (wf, Cin, "Cin");
+    sc_trace (wf, Opcode, "Opcode");
+    sc_trace (wf, Cout, "Cout");
+    sc_trace (wf, Result, "Result");
+   
+
+    for (int i=0; i<4 ;i++){
+        A = 1;
+        B = 4;
+        Cin = 0;
+        Opcode = i;
+        sc_start(1,SC_NS);
+    }
+
+
+    A = 0;
+    B = 0;
+    Cin = 0;
+    Opcode = 0000;
+    sc_start(1,SC_NS);
+    
+    
+    sc_close_vcd_trace_file(wf);
+    
+
+    return 0;
+}

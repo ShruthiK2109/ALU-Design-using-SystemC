@@ -1,0 +1,29 @@
+include $(SYSTEMC_HOME)/build-unix/Makefile.config
+
+PROJECTS := alu
+COMMON_TARGETS := all run check clean ultraclean
+
+COMMON_SRCS = alu.cpp
+	
+floptest_SRCS = \
+	$(COMMON_SRCS) \
+	alu_tb.cpp
+
+
+# project not set -> all projects
+ifeq (,$(strip $(PROJECT)))
+
+$(COMMON_TARGETS)::
+	@for prj in $(PROJECTS) ; do  \
+	  $(MAKE) $@ FLAG_BATCH=1 PROJECT=$$prj ; \
+	done
+
+else # module-specific rules
+
+OBJS := $($(PROJECT)_SRCS:.cpp=.o)
+
+include $(SYSTEMVERILOG_HOME)/build-unix/Makefile.rules
+
+endif # project switch
+
+## Taf!
